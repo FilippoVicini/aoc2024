@@ -1,26 +1,39 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 using namespace std;
 
-int main() {
-  string fileName = "inputFile";
-  string myText;
-  vector<vector<int>> lines;
-  vector<vector<int>> flines;
-  vector<int> result;
-  string first, second;
+bool is_safe(const vector<int> &line) {
+  for (size_t i = 1; i < line.size(); i++) {
+    int diff = line[i] - line[i - 1];
 
+    if (abs(diff) > 3 || diff == 0) {
+      return false;
+    }
+
+    if (i > 1 && (diff > 0) != (line[i - 1] - line[i - 2] > 0)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+int main() {
+
+  string fileName = "inputFile";
   ifstream in(fileName);
   if (!in) {
     cerr << "Error: Could not open file " << fileName << endl;
     return 1;
   }
+
+  vector<vector<int>> lines;
+  string myText;
 
   while (getline(in, myText)) {
     stringstream ss(myText);
@@ -33,53 +46,34 @@ int main() {
 
     if (!currentLine.empty()) {
       lines.push_back(currentLine);
-    } else {
-      cerr << "Warning: Empty or invalid line skipped: " << myText << endl;
     }
   }
-
-  vector<bool> vals;
-
-  for (int i = 0; i < lines.size(); i++) {
-    vector<int> vec = lines[i];
-    if (is_sorted(lines[i].begin(), lines[i].end())) {
-      cout << "sorted" << endl;
-      flines.push_back(vec);
-    } else if (is_sorted(lines[i].begin(), lines[i].end(), greater<int>())) {
-      cout << "sorted" << endl;
-      flines.push_back(vec);
-    } else {
-      cout << "not sorted" << endl;
-    }
-  }
-
-  int count = 0;
 
   int safeCount = 0;
 
   for (const auto &line : lines) {
-    bool safe = true;
+    if (is_safe(line)) {
+      safeCount++;
+      continue;
+    }
 
-    for (size_t j = 1; j < line.size(); j++) {
-      int diff = line[j] - line[j - 1];
+    bool became_safe = false;
 
-      if (abs(diff) > 3 || diff == 0) {
-        safe = false;
-        break;
-      }
-
-      if (j > 1 && (diff > 0) != (line[j - 1] - line[j - 2] > 0)) {
-        safe = false;
+    for (size_t i = 0; i < line.size(); i++) {
+      vector<int> modifiedLine = line;
+      modifiedLine.erase(modifiedLine.begin() + i);
+      if (is_safe(modifiedLine)) {
+        became_safe = true;
         break;
       }
     }
 
-    if (safe) {
+    if (became_safe) {
       safeCount++;
     }
   }
 
-  cout << "Safe Count: " << safeCount << endl;
+  cout << "Safe Count (with adjustments): " << safeCount << endl;
 
   return 0;
 }
