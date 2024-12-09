@@ -5,7 +5,7 @@
 using namespace std;
 
 void read_file(vector<int> &longline) {
-  fstream myfile("input", ios_base::in);
+  fstream myfile("input.txt", ios_base::in);
   if (!myfile.is_open()) {
     cerr << "Error: Could not open the file 'input'." << endl;
     return;
@@ -21,110 +21,51 @@ void read_file(vector<int> &longline) {
   myfile.close();
 }
 
-void convert(vector<int> &longline, vector<char> &newVec) {
-  int count = 0;
-
+void convert(vector<int> &longline, vector<int> &v) {
   for (int i = 0; i < longline.size(); i++) {
-    if (i % 2 != 0) {
-      for (int j = 0; j < longline[i]; j++) {
-        newVec.push_back('.');
-      }
+    if (i % 2 == 1) {
+      v.insert(v.end(), longline[i], -1);
     } else {
-      for (int j = 0; j < longline[i]; j++) {
-        newVec.push_back('0' + count);
-      }
-      count++;
+      v.insert(v.end(), longline[i], i / 2);
     }
   }
-
-  for (int i = 0; i < newVec.size(); i++) {
-    cout << newVec[i];
-  }
-  cout << endl;
 }
 
-void compacting(vector<char> &newVec, vector<char> &resVec) {
-  int size = newVec.size();
-  resVec.resize(size, '.');
-  size_t lastNumIndex = size - 1; // Changed to size_t
-  int validCount = 0;
+void compacting(vector<int> &v) {
+  int i = 0, j = v.size() - 1;
+  while (i < j) {
+    if (v[i] == -1 && v[j] != -1) {
+      std::swap(v[i], v[j]);
+      continue;
+    }
 
-  for (int i = 0; i < newVec.size(); i++) {
-    if (newVec[i] != '.') {
-      validCount++;
+    if (v[i] != -1) {
+      i++;
+    }
+
+    if (v[j] == -1) {
+      j--;
     }
   }
-
-  while (lastNumIndex < newVec.size() &&
-         newVec[lastNumIndex] == '.') { // Added size check
-    if (lastNumIndex == 0)
-      break; // Prevent underflow
-    lastNumIndex--;
-  }
-
-  for (int i = 0; i < size; i++) {
-    if (newVec[i] != '.') {
-      resVec[i] = newVec[i];
-    } else {
-      if (lastNumIndex >= i) {
-        while (lastNumIndex >= i && newVec[lastNumIndex] == '.') {
-          if (lastNumIndex == 0)
-            break; // Prevent underflow
-          lastNumIndex--;
-        }
-        if (lastNumIndex >= i) {
-          resVec[i] = newVec[lastNumIndex];
-          if (lastNumIndex > 0)
-            lastNumIndex--; // Prevent underflow
-        } else {
-          resVec[i] = '.';
-        }
-      } else {
-        resVec[i] = '.';
-      }
-    }
-  }
-
-  for (int i = validCount; i < newVec.size(); i++) {
-    resVec[i] = '.';
-  }
-
-  for (char c : resVec) {
-    cout << c;
-  }
-  cout << endl;
 }
 
-int countRes(vector<char> resVec) {
-  float mul = 0;
-  for (int i = 0; i < resVec.size(); i++) {
-    if (resVec[i] != '.') {
-      mul += i * (resVec[i] - '0'); // Convert char to int
-    }
+long long countRes(const vector<int> &v) {
+  long long ans = 0;
+  for (int i = 0; i < v.size() && v[i] != -1; i++) {
+    ans += i * v[i];
   }
-  return static_cast<int>(mul);
+  return ans;
 }
 
 int main() {
 
   vector<int> line;
   read_file(line);
-  vector<char> newVec;
-  vector<char> resVec;
+  vector<int> newVec;
 
-  if (line.empty()) {
-    cout << "No data read from the file." << endl;
-    return 0;
-  }
-
-  for (int i = 0; i < line.size(); i++) {
-    cout << line[i] << " ";
-  }
-
-  cout << endl;
   convert(line, newVec);
-  cout << endl;
-  compacting(newVec, resVec);
-  cout << countRes(resVec);
+  compacting(newVec);
+  cout << countRes(newVec);
+
   return 0;
 }
